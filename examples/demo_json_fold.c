@@ -31,6 +31,8 @@ static LRESULT CALLBACK host_wndproc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 {
     demo_app *app = (demo_app *)(LONG_PTR)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
     switch (msg) {
+    case WM_ERASEBKGND:
+        return 1;
     case WM_SIZE:
         if (app != NULL && app->ed != NULL) {
             monac_resize(app->ed, LOWORD(lParam), HIWORD(lParam));
@@ -65,7 +67,7 @@ static HWND create_host_window(demo_app *app, int x, int y, int w, int h, bool v
     hwnd = CreateWindowExW(
         0, L"MonacDemoJsonHost",
         L"Monac Demo 1: JSONC Highlight, Inline Folding & Soft Wrap",
-        WS_OVERLAPPEDWINDOW | (visible ? WS_VISIBLE : 0),
+        WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | (visible ? WS_VISIBLE : 0),
         x, y, w, h, NULL, NULL, hinst, NULL);
     if (hwnd != NULL) {
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)app);
@@ -222,7 +224,7 @@ int main(void)
         demo_app app = { NULL, NULL };
         MSG msg;
         app.host_hwnd = create_host_window(&app, CW_USEDEFAULT, CW_USEDEFAULT,
-                                           1024, 680, true);
+                                           1024, 680, false);
         if (app.host_hwnd == NULL) return 1;
         app.ed = monac_create(NULL);
         if (app.ed == NULL) return 1;
@@ -233,6 +235,8 @@ int main(void)
                                     rc.right - rc.left, rc.bottom - rc.top);
         }
         setup_sample_document(app.ed);
+        ShowWindow(app.host_hwnd, SW_SHOW);
+        UpdateWindow(app.host_hwnd);
         SetFocus(monac_get_hwnd(app.ed));
         while (GetMessageW(&msg, NULL, 0, 0) > 0) {
             TranslateMessage(&msg);

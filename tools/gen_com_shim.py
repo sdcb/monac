@@ -30,6 +30,17 @@ BANNER = (
 KEEP_TOKENS = {"IID", "REFIID", "REFGUID", "REFCLSID"}
 TOKEN_ALIASES = {"WINBOOL": "BOOL"}
 
+# Direct2D COM methods returning structs by value follow MSVC C++ member-function
+# ABI (hidden out-pointer right after `This`, returning that pointer), which
+# differs from C struct-return ABI on both MinGW-w64 and MSVC in C mode.
+AGGREGATE_RETURN_TYPES = {
+    "D2D1_SIZE_F",
+    "D2D1_SIZE_U",
+    "D2D1_PIXEL_FORMAT",
+    "D2D1_COLOR_F",
+    "D2D1_POINT_2F",
+}
+
 DWRITE_TYPED = {
     "QueryInterface", "AddRef", "Release",
     "GetSystemFontCollection",
@@ -110,6 +121,13 @@ def build_member(ret, name, args, field, typed, owned, hook):
         return "    void *%s;" % field
     ret = normalise_decl(rewrite_types(ret, owned, hook))
     args = normalise_decl(rewrite_types(args, owned, hook))
+    if ret in AGGREGATE_RETURN_TYPES:
+        if "," in args:
+            first, rest = args.split(",", 1)
+            args = "%s, %s *out, %s" % (first.strip(), ret, rest.strip())
+        else:
+            args = "%s, %s *out" % (args.strip(), ret)
+        ret = ret + " *"
     return "    %s (STDMETHODCALLTYPE *%s)(%s);" % (ret, field, args)
 
 

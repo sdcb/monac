@@ -76,6 +76,40 @@ static void test_win32_control_messages(void)
     DestroyWindow(hwnd);
 }
 
+static void test_hwnd_render_target_wm_paint(void)
+{
+    HWND parent;
+    HWND ed_hwnd;
+    monac_editor_t *ed;
+    monac_frame_stats_t stats;
+
+    parent = CreateWindowExW(0, L"STATIC", L"monac_hwnd_test",
+                             WS_OVERLAPPEDWINDOW, -3000, -3000, 640, 360,
+                             NULL, NULL, GetModuleHandleW(NULL), NULL);
+    MT_ASSERT(parent != NULL);
+
+    ed = monac_create(NULL);
+    MT_ASSERT(ed != NULL);
+    ed_hwnd = monac_attach_hwnd(ed, parent, 0, 0, 640, 360);
+    MT_ASSERT(ed_hwnd != NULL);
+
+    monac_set_language(ed, L"json");
+    monac_set_text(ed, L"{\"hello\": \"world\", \"n\": 42}", 27);
+
+    /* Exercise the live HwndRenderTarget WM_PAINT + GetSize + Resize path without showing */
+    SendMessageW(ed_hwnd, WM_PAINT, 0, 0);
+    monac_get_frame_stats(ed, &stats);
+    MT_ASSERT_EQ(1, stats.frame_count);
+
+    monac_resize(ed, 800, 500);
+    SendMessageW(ed_hwnd, WM_PAINT, 0, 0);
+    monac_get_frame_stats(ed, &stats);
+    MT_ASSERT_EQ(2, stats.frame_count);
+
+    monac_destroy(ed);
+    DestroyWindow(parent);
+}
+
 static void test_builtin_d2d_overlays(void)
 {
     monac_editor_t *ed = monac_create(NULL);
@@ -132,6 +166,7 @@ int main(void)
 {
     MT_RUN(test_dll_api_and_offscreen_render);
     MT_RUN(test_win32_control_messages);
+    MT_RUN(test_hwnd_render_target_wm_paint);
     MT_RUN(test_builtin_d2d_overlays);
     return MT_FINISH();
 }

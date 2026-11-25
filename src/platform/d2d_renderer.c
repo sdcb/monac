@@ -178,7 +178,7 @@ static MC_ID2D1RenderTarget *mc_ensure_hwnd_rt(monac_editor_t *ed)
     memset(&rt_props, 0, sizeof(rt_props));
     rt_props.type = D2D1_RENDER_TARGET_TYPE_DEFAULT;
     rt_props.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    rt_props.pixelFormat.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED;
+    rt_props.pixelFormat.alphaMode = D2D1_ALPHA_MODE_IGNORE;
     rt_props.dpiX = ed->dpi > 0.0f ? ed->dpi : 96.0f;
     rt_props.dpiY = ed->dpi > 0.0f ? ed->dpi : 96.0f;
 
@@ -904,7 +904,8 @@ void mc_renderer_paint_hwnd(monac_editor_t *ed)
     if (rt == NULL) return;
 
     {
-        D2D1_SIZE_F sz = MC_CALL0(rt, GetSize);
+        D2D1_SIZE_F sz = { 0.0f, 0.0f };
+        (void)MC_CALL(rt, GetSize, &sz);
         hr = mc_renderer_draw_frame(ed, rt, sz.width, sz.height);
     }
     if (hr == D2DERR_RECREATE_TARGET) {

@@ -94,6 +94,8 @@ static LRESULT CALLBACK lsp_host_wndproc(HWND hwnd, UINT msg, WPARAM wParam, LPA
 {
     lsp_demo_app *app = (lsp_demo_app *)(LONG_PTR)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
     switch (msg) {
+    case WM_ERASEBKGND:
+        return 1;
     case WM_SIZE:
         if (app && app->ed) monac_resize(app->ed, LOWORD(lParam), HIWORD(lParam));
         return 0;
@@ -131,7 +133,7 @@ static HWND create_lsp_host(lsp_demo_app *app, int x, int y, int w, int h, bool 
     hwnd = CreateWindowExW(
         0, L"MonacDemoLspHost",
         L"Monac Demo 2: Pure C17 Editor + Out-of-Process C# LSP",
-        WS_OVERLAPPEDWINDOW | (visible ? WS_VISIBLE : 0),
+        WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | (visible ? WS_VISIBLE : 0),
         x, y, w, h, NULL, NULL, hinst, NULL);
     if (hwnd != NULL) {
         SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)app);
@@ -315,7 +317,7 @@ int main(void)
         MSG msg;
         RECT rc;
 
-        app.host_hwnd = create_lsp_host(&app, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 680, true);
+        app.host_hwnd = create_lsp_host(&app, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 680, false);
         if (app.host_hwnd == NULL) return 1;
         app.ed = monac_create(NULL);
         if (app.ed == NULL) return 1;
@@ -323,9 +325,18 @@ int main(void)
         (void)monac_attach_hwnd(app.ed, app.host_hwnd, 0, 0,
                                 rc.right - rc.left, rc.bottom - rc.top);
         load_sample_csharp(app.ed);
+        ShowWindow(app.host_hwnd, SW_SHOW);
+        UpdateWindow(app.host_hwnd);
+        SetFocus(monac_get_hwnd(app.ed));
 
         _snwprintf(sample_dir, MAX_PATH, L"%hs\\examples\\csharp_sample", MONAC_SOURCE_DIR);
         sample_dir[MAX_PATH - 1] = L'\0';
+        {
+            wchar_t *p;
+            for (p = sample_dir; *p != L'\0'; ++p) {
+                if (*p == L'/') *p = L'\\';
+            }
+        }
         _snwprintf(prog_path, MAX_PATH, L"%ls\\Program.cs", sample_dir);
         prog_path[MAX_PATH - 1] = L'\0';
         (void)monac_lsp_path_to_uri(sample_dir, root_uri, MAX_PATH * 2);
@@ -341,7 +352,6 @@ int main(void)
         app.lsp = monac_lsp_start(&cfg);
         if (app.lsp != NULL) monac_lsp_attach(app.lsp, app.ed, doc_uri, L"csharp");
 
-        SetFocus(monac_get_hwnd(app.ed));
         while (GetMessageW(&msg, NULL, 0, 0) > 0) {
             TranslateMessage(&msg);
             DispatchMessageW(&msg);

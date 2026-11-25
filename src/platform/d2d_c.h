@@ -142,11 +142,11 @@ struct MC_ID2D1RenderTargetVtbl {
     void (STDMETHODCALLTYPE *Clear)(MC_ID2D1RenderTarget *This, const D2D1_COLOR_F *clearColor);
     void (STDMETHODCALLTYPE *BeginDraw)(MC_ID2D1RenderTarget *This);
     HRESULT (STDMETHODCALLTYPE *EndDraw)(MC_ID2D1RenderTarget *This, D2D1_TAG *tag1, D2D1_TAG *tag2);
-    D2D1_PIXEL_FORMAT (STDMETHODCALLTYPE *GetPixelFormat)(MC_ID2D1RenderTarget *This);
+    D2D1_PIXEL_FORMAT * (STDMETHODCALLTYPE *GetPixelFormat)(MC_ID2D1RenderTarget *This, D2D1_PIXEL_FORMAT *out);
     void (STDMETHODCALLTYPE *SetDpi)(MC_ID2D1RenderTarget *This, FLOAT dpiX, FLOAT dpiY);
     void (STDMETHODCALLTYPE *GetDpi)(MC_ID2D1RenderTarget *This, FLOAT *dpiX, FLOAT *dpiY);
-    D2D1_SIZE_F (STDMETHODCALLTYPE *GetSize)(MC_ID2D1RenderTarget *This);
-    D2D1_SIZE_U (STDMETHODCALLTYPE *GetPixelSize)(MC_ID2D1RenderTarget *This);
+    D2D1_SIZE_F * (STDMETHODCALLTYPE *GetSize)(MC_ID2D1RenderTarget *This, D2D1_SIZE_F *out);
+    D2D1_SIZE_U * (STDMETHODCALLTYPE *GetPixelSize)(MC_ID2D1RenderTarget *This, D2D1_SIZE_U *out);
     UINT32 (STDMETHODCALLTYPE *GetMaximumBitmapSize)(MC_ID2D1RenderTarget *This);
     BOOL (STDMETHODCALLTYPE *IsSupported)(MC_ID2D1RenderTarget *This, const D2D1_RENDER_TARGET_PROPERTIES *renderTargetProperties);
 };
@@ -202,11 +202,11 @@ struct MC_ID2D1HwndRenderTargetVtbl {
     void (STDMETHODCALLTYPE *Clear)(MC_ID2D1RenderTarget *This, const D2D1_COLOR_F *clearColor);
     void (STDMETHODCALLTYPE *BeginDraw)(MC_ID2D1RenderTarget *This);
     HRESULT (STDMETHODCALLTYPE *EndDraw)(MC_ID2D1RenderTarget *This, D2D1_TAG *tag1, D2D1_TAG *tag2);
-    D2D1_PIXEL_FORMAT (STDMETHODCALLTYPE *GetPixelFormat)(MC_ID2D1RenderTarget *This);
+    D2D1_PIXEL_FORMAT * (STDMETHODCALLTYPE *GetPixelFormat)(MC_ID2D1RenderTarget *This, D2D1_PIXEL_FORMAT *out);
     void (STDMETHODCALLTYPE *SetDpi)(MC_ID2D1RenderTarget *This, FLOAT dpiX, FLOAT dpiY);
     void (STDMETHODCALLTYPE *GetDpi)(MC_ID2D1RenderTarget *This, FLOAT *dpiX, FLOAT *dpiY);
-    D2D1_SIZE_F (STDMETHODCALLTYPE *GetSize)(MC_ID2D1RenderTarget *This);
-    D2D1_SIZE_U (STDMETHODCALLTYPE *GetPixelSize)(MC_ID2D1RenderTarget *This);
+    D2D1_SIZE_F * (STDMETHODCALLTYPE *GetSize)(MC_ID2D1RenderTarget *This, D2D1_SIZE_F *out);
+    D2D1_SIZE_U * (STDMETHODCALLTYPE *GetPixelSize)(MC_ID2D1RenderTarget *This, D2D1_SIZE_U *out);
     UINT32 (STDMETHODCALLTYPE *GetMaximumBitmapSize)(MC_ID2D1RenderTarget *This);
     BOOL (STDMETHODCALLTYPE *IsSupported)(MC_ID2D1RenderTarget *This, const D2D1_RENDER_TARGET_PROPERTIES *renderTargetProperties);
     D2D1_WINDOW_STATE (STDMETHODCALLTYPE *CheckWindowState)(MC_ID2D1HwndRenderTarget *This);
@@ -265,11 +265,11 @@ struct MC_ID2D1DCRenderTargetVtbl {
     void (STDMETHODCALLTYPE *Clear)(MC_ID2D1RenderTarget *This, const D2D1_COLOR_F *clearColor);
     void (STDMETHODCALLTYPE *BeginDraw)(MC_ID2D1RenderTarget *This);
     HRESULT (STDMETHODCALLTYPE *EndDraw)(MC_ID2D1RenderTarget *This, D2D1_TAG *tag1, D2D1_TAG *tag2);
-    D2D1_PIXEL_FORMAT (STDMETHODCALLTYPE *GetPixelFormat)(MC_ID2D1RenderTarget *This);
+    D2D1_PIXEL_FORMAT * (STDMETHODCALLTYPE *GetPixelFormat)(MC_ID2D1RenderTarget *This, D2D1_PIXEL_FORMAT *out);
     void (STDMETHODCALLTYPE *SetDpi)(MC_ID2D1RenderTarget *This, FLOAT dpiX, FLOAT dpiY);
     void (STDMETHODCALLTYPE *GetDpi)(MC_ID2D1RenderTarget *This, FLOAT *dpiX, FLOAT *dpiY);
-    D2D1_SIZE_F (STDMETHODCALLTYPE *GetSize)(MC_ID2D1RenderTarget *This);
-    D2D1_SIZE_U (STDMETHODCALLTYPE *GetPixelSize)(MC_ID2D1RenderTarget *This);
+    D2D1_SIZE_F * (STDMETHODCALLTYPE *GetSize)(MC_ID2D1RenderTarget *This, D2D1_SIZE_F *out);
+    D2D1_SIZE_U * (STDMETHODCALLTYPE *GetPixelSize)(MC_ID2D1RenderTarget *This, D2D1_SIZE_U *out);
     UINT32 (STDMETHODCALLTYPE *GetMaximumBitmapSize)(MC_ID2D1RenderTarget *This);
     BOOL (STDMETHODCALLTYPE *IsSupported)(MC_ID2D1RenderTarget *This, const D2D1_RENDER_TARGET_PROPERTIES *renderTargetProperties);
     HRESULT (STDMETHODCALLTYPE *BindDC)(MC_ID2D1DCRenderTarget *This, const HDC hDC, const RECT *pSubRect);
@@ -296,7 +296,7 @@ struct MC_ID2D1SolidColorBrushVtbl {
     FLOAT (STDMETHODCALLTYPE *GetOpacity)(MC_ID2D1Brush *This);
     void (STDMETHODCALLTYPE *GetTransform)(MC_ID2D1Brush *This, D2D1_MATRIX_3X2_F *transform);
     void (STDMETHODCALLTYPE *SetColor)(MC_ID2D1SolidColorBrush *This, const D2D1_COLOR_F *color);
-    D2D1_COLOR_F (STDMETHODCALLTYPE *GetColor)(MC_ID2D1SolidColorBrush *This);
+    D2D1_COLOR_F * (STDMETHODCALLTYPE *GetColor)(MC_ID2D1SolidColorBrush *This, D2D1_COLOR_F *out);
 };
 
 struct MC_ID2D1LinearGradientBrushVtbl {
@@ -310,8 +310,8 @@ struct MC_ID2D1LinearGradientBrushVtbl {
     void (STDMETHODCALLTYPE *GetTransform)(MC_ID2D1Brush *This, D2D1_MATRIX_3X2_F *transform);
     void (STDMETHODCALLTYPE *SetStartPoint)(MC_ID2D1LinearGradientBrush *This, D2D1_POINT_2F startPoint);
     void (STDMETHODCALLTYPE *SetEndPoint)(MC_ID2D1LinearGradientBrush *This, D2D1_POINT_2F endPoint);
-    D2D1_POINT_2F (STDMETHODCALLTYPE *GetStartPoint)(MC_ID2D1LinearGradientBrush *This);
-    D2D1_POINT_2F (STDMETHODCALLTYPE *GetEndPoint)(MC_ID2D1LinearGradientBrush *This);
+    D2D1_POINT_2F * (STDMETHODCALLTYPE *GetStartPoint)(MC_ID2D1LinearGradientBrush *This, D2D1_POINT_2F *out);
+    D2D1_POINT_2F * (STDMETHODCALLTYPE *GetEndPoint)(MC_ID2D1LinearGradientBrush *This, D2D1_POINT_2F *out);
     void (STDMETHODCALLTYPE *GetGradientStopCollection)(MC_ID2D1LinearGradientBrush *This, MC_ID2D1GradientStopCollection **gradientStopCollection);
 };
 
@@ -328,8 +328,8 @@ struct MC_ID2D1RadialGradientBrushVtbl {
     void (STDMETHODCALLTYPE *SetGradientOriginOffset)(MC_ID2D1RadialGradientBrush *This, D2D1_POINT_2F gradientOriginOffset);
     void (STDMETHODCALLTYPE *SetRadiusX)(MC_ID2D1RadialGradientBrush *This, FLOAT radiusX);
     void (STDMETHODCALLTYPE *SetRadiusY)(MC_ID2D1RadialGradientBrush *This, FLOAT radiusY);
-    D2D1_POINT_2F (STDMETHODCALLTYPE *GetCenter)(MC_ID2D1RadialGradientBrush *This);
-    D2D1_POINT_2F (STDMETHODCALLTYPE *GetGradientOriginOffset)(MC_ID2D1RadialGradientBrush *This);
+    D2D1_POINT_2F * (STDMETHODCALLTYPE *GetCenter)(MC_ID2D1RadialGradientBrush *This, D2D1_POINT_2F *out);
+    D2D1_POINT_2F * (STDMETHODCALLTYPE *GetGradientOriginOffset)(MC_ID2D1RadialGradientBrush *This, D2D1_POINT_2F *out);
     FLOAT (STDMETHODCALLTYPE *GetRadiusX)(MC_ID2D1RadialGradientBrush *This);
     FLOAT (STDMETHODCALLTYPE *GetRadiusY)(MC_ID2D1RadialGradientBrush *This);
     void (STDMETHODCALLTYPE *GetGradientStopCollection)(MC_ID2D1RadialGradientBrush *This, MC_ID2D1GradientStopCollection **gradientStopCollection);
@@ -366,9 +366,9 @@ struct MC_ID2D1BitmapVtbl {
     ULONG (STDMETHODCALLTYPE *AddRef)(void *This);
     ULONG (STDMETHODCALLTYPE *Release)(void *This);
     void (STDMETHODCALLTYPE *GetFactory)(MC_ID2D1Resource *This, MC_ID2D1Factory **factory);
-    D2D1_SIZE_F (STDMETHODCALLTYPE *GetSize)(MC_ID2D1Bitmap *This);
-    D2D1_SIZE_U (STDMETHODCALLTYPE *GetPixelSize)(MC_ID2D1Bitmap *This);
-    D2D1_PIXEL_FORMAT (STDMETHODCALLTYPE *GetPixelFormat)(MC_ID2D1Bitmap *This);
+    D2D1_SIZE_F * (STDMETHODCALLTYPE *GetSize)(MC_ID2D1Bitmap *This, D2D1_SIZE_F *out);
+    D2D1_SIZE_U * (STDMETHODCALLTYPE *GetPixelSize)(MC_ID2D1Bitmap *This, D2D1_SIZE_U *out);
+    D2D1_PIXEL_FORMAT * (STDMETHODCALLTYPE *GetPixelFormat)(MC_ID2D1Bitmap *This, D2D1_PIXEL_FORMAT *out);
     void (STDMETHODCALLTYPE *GetDpi)(MC_ID2D1Bitmap *This, FLOAT *dpiX, FLOAT *dpiY);
     HRESULT (STDMETHODCALLTYPE *CopyFromBitmap)(MC_ID2D1Bitmap *This, const D2D1_POINT_2U *destPoint, MC_ID2D1Bitmap *bitmap, const D2D1_RECT_U *srcRect);
     HRESULT (STDMETHODCALLTYPE *CopyFromRenderTarget)(MC_ID2D1Bitmap *This, const D2D1_POINT_2U *destPoint, MC_ID2D1RenderTarget *renderTarget, const D2D1_RECT_U *srcRect);
