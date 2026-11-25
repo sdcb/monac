@@ -148,7 +148,8 @@ void mc_find_bar_draw(monac_editor_t *ed, MC_ID2D1RenderTarget *rt,
             col = mc_ov_color(0xFFCDD6F4u);
             MC_CALL(brush, SetColor, &col);
             MC_CALL(rt, DrawText, fb->find_text.data, (UINT32)fb->find_text.length, fmt,
-                    &trc, MC_AS(ID2D1Brush, brush), D2D1_DRAW_TEXT_OPTIONS_CLIP,
+                    &trc, MC_AS(ID2D1Brush, brush),
+                    mc_editor_text_options(ed, D2D1_DRAW_TEXT_OPTIONS_CLIP),
                     DWRITE_MEASURING_MODE_NATURAL);
         } else {
             col = mc_ov_color(0xFF6C7086u);
@@ -204,7 +205,8 @@ void mc_find_bar_draw(monac_editor_t *ed, MC_ID2D1RenderTarget *rt,
                 col = mc_ov_color(0xFFCDD6F4u);
                 MC_CALL(brush, SetColor, &col);
                 MC_CALL(rt, DrawText, fb->replace_text.data, (UINT32)fb->replace_text.length, fmt,
-                        &trc, MC_AS(ID2D1Brush, brush), D2D1_DRAW_TEXT_OPTIONS_CLIP,
+                        &trc, MC_AS(ID2D1Brush, brush),
+                        mc_editor_text_options(ed, D2D1_DRAW_TEXT_OPTIONS_CLIP),
                         DWRITE_MEASURING_MODE_NATURAL);
             } else {
                 col = mc_ov_color(0xFF6C7086u);

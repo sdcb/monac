@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MC_D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT ((D2D1_DRAW_TEXT_OPTIONS)0x00000004)
 #ifndef D2DERR_RECREATE_TARGET
 #define D2DERR_RECREATE_TARGET ((HRESULT)0x8899000CL)
 #endif
@@ -145,15 +144,24 @@ static MC_ID2D1SolidColorBrush *mc_get_cached_brush(mc_renderer_state *r,
     return b;
 }
 
-static void mc_probe_color_font(mc_renderer_state *r, MC_ID2D1RenderTarget *rt)
+static void mc_probe_color_font(monac_editor_t *ed, MC_ID2D1RenderTarget *rt)
 {
-    MC_IUnknown *dc = NULL;
-    if (rt != NULL && SUCCEEDED(MC_QUERY(rt, &IID_ID2D1DeviceContext, &dc)) && dc != NULL) {
-        r->supports_color_font = true;
-        MC_SAFE_RELEASE(dc);
-    } else {
-        r->supports_color_font = false;
+    mc_renderer_state *r = &ed->renderer;
+    MC_IUnknown *dc1 = NULL;
+    MC_IUnknown *dwf2 = NULL;
+    bool ok = false;
+
+    /* Color font rendering (COLR/CPAL/SVG/bitmap emoji) requires Win8.1+
+     * Direct2D 1.2 (ID2D1DeviceContext1) and DirectWrite 2 (IDWriteFactory2).
+     * Probing via QI keeps the Win7 RTM binary baseline intact. */
+    if (rt != NULL && ed->doc.dw.factory != NULL &&
+        SUCCEEDED(MC_QUERY(rt, &IID_ID2D1DeviceContext1, &dc1)) && dc1 != NULL &&
+        SUCCEEDED(MC_QUERY(ed->doc.dw.factory, &IID_IDWriteFactory2, &dwf2)) && dwf2 != NULL) {
+        ok = true;
     }
+    MC_SAFE_RELEASE(dwf2);
+    MC_SAFE_RELEASE(dc1);
+    r->supports_color_font = ok;
 }
 
 static MC_ID2D1RenderTarget *mc_ensure_hwnd_rt(monac_editor_t *ed)
@@ -196,7 +204,7 @@ static MC_ID2D1RenderTarget *mc_ensure_hwnd_rt(monac_editor_t *ed)
         MC_ID2D1RenderTarget *rt = MC_AS(ID2D1RenderTarget, r->hwnd_rt);
         D2D1_COLOR_F white = { 1.0f, 1.0f, 1.0f, 1.0f };
         (void)MC_CALL(rt, CreateSolidColorBrush, &white, NULL, &r->scratch_brush);
-        mc_probe_color_font(r, rt);
+        mc_probe_color_font(ed, rt);
         ++r->rt_generation;
         return rt;
     }
@@ -621,6 +629,7 @@ static HRESULT mc_renderer_draw_frame(monac_editor_t *ed,
     r->inline_draw.hovered_fold_id = ed->hovered_fold_id;
     r->inline_draw.origin_offset_x = 0.0f;
     r->inline_draw.origin_offset_y = 0.0f;
+    r->inline_draw.text_options = text_opts;
 
     {
         MC_ID2D1SolidColorBrush *fg_brush = mc_get_cached_brush(r, rt, ed->theme.fg);
@@ -953,7 +962,7 @@ bool mc_renderer_render_to_bgra(monac_editor_t *ed, uint32_t width, uint32_t hei
             MC_ID2D1RenderTarget *rt = MC_AS(ID2D1RenderTarget, r->dc_rt);
             D2D1_COLOR_F white = { 1.0f, 1.0f, 1.0f, 1.0f };
             (void)MC_CALL(rt, CreateSolidColorBrush, &white, NULL, &r->scratch_brush);
-            mc_probe_color_font(r, rt);
+            mc_probe_color_font(ed, rt);
             ++r->rt_generation;
         }
     }

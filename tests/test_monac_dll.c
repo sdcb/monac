@@ -116,6 +116,62 @@ static void test_hwnd_render_target_wm_paint(void)
     DestroyWindow(parent);
 }
 
+static void test_color_emoji_rendering(void)
+{
+    monac_theme_t theme;
+    monac_options_t opts;
+    monac_editor_t *ed;
+    const wchar_t emojis[] = L"\U0001F680 \U0001F525 \u2705 \U0001F3A8 \U0001F389";
+    uint32_t w = 320, h = 80;
+    uint8_t *pixels = (uint8_t *)calloc((size_t)w * h * 4u, 1);
+    size_t i;
+    int colorful_pixels = 0;
+
+    /* Pure neutral grayscale theme so colorful pixels can ONLY come from color emoji */
+    memset(&theme, 0, sizeof(theme));
+    theme.bg = 0xFF181818u;
+    theme.fg = 0xFFFFFFFFu;
+    theme.gutter_bg = 0xFF181818u;
+    theme.gutter_fg = 0xFF808080u;
+    theme.gutter_active_fg = 0xFFC0C0C0u;
+    theme.current_line_bg = 0xFF181818u;
+    theme.selection_bg = 0xFF404040u;
+    theme.caret = 0xFFFFFFFFu;
+    theme.indent_guide = 0xFF282828u;
+    theme.scrollbar_thumb = 0xFF404040u;
+    memset(&opts, 0, sizeof(opts));
+    opts.struct_size = sizeof(opts);
+    opts.theme = &theme;
+
+    ed = monac_create(&opts);
+    MT_ASSERT(ed != NULL && pixels != NULL);
+    monac_set_text(ed, emojis, wcslen(emojis));
+
+    MT_ASSERT(monac_render_to_bgra(ed, w, h, pixels, w * 4u));
+    for (i = 0; i < (size_t)w * h * 4u; i += 4) {
+        int b = pixels[i];
+        int g = pixels[i + 1];
+        int r = pixels[i + 2];
+        int d1 = r > g ? r - g : g - r;
+        int d2 = r > b ? r - b : b - r;
+        int d3 = g > b ? g - b : b - g;
+        if (d1 > 60 || d2 > 60 || d3 > 60) {
+            ++colorful_pixels;
+        }
+    }
+    /* On Win8.1+ (where shcore + D2D 1.2 + DWrite 2 exist), color emoji must render in color */
+    {
+        HMODULE shcore = LoadLibraryW(L"shcore.dll");
+        if (shcore != NULL) {
+            FreeLibrary(shcore);
+            MT_ASSERT(colorful_pixels > 20);
+        }
+    }
+
+    free(pixels);
+    monac_destroy(ed);
+}
+
 static void test_builtin_d2d_overlays(void)
 {
     monac_editor_t *ed = monac_create(NULL);
@@ -173,6 +229,7 @@ int main(void)
     MT_RUN(test_dll_api_and_offscreen_render);
     MT_RUN(test_win32_control_messages);
     MT_RUN(test_hwnd_render_target_wm_paint);
+    MT_RUN(test_color_emoji_rendering);
     MT_RUN(test_builtin_d2d_overlays);
     return MT_FINISH();
 }

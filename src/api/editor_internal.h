@@ -169,6 +169,16 @@ bool mc_overlays_has_text_focus(const monac_editor_t *ed);
 bool mc_overlays_ime_rect(const monac_editor_t *ed, monac_rect_f_t *out_rect);
 void mc_overlays_commit_ime(monac_editor_t *ed, const wchar_t *text, size_t len);
 
+#define MC_D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT ((D2D1_DRAW_TEXT_OPTIONS)0x00000004)
+
+static inline D2D1_DRAW_TEXT_OPTIONS mc_editor_text_options(const monac_editor_t *ed,
+                                                            D2D1_DRAW_TEXT_OPTIONS base)
+{
+    return (ed != NULL && ed->renderer.supports_color_font)
+               ? (D2D1_DRAW_TEXT_OPTIONS)(base | MC_D2D1_DRAW_TEXT_OPTIONS_ENABLE_COLOR_FONT)
+               : base;
+}
+
 /* UIA hooks (stubbed in Phase 5, implemented in Phase 7) */
 void mc_uia_detach(monac_editor_t *ed);
 LRESULT mc_uia_handle_getobject(monac_editor_t *ed, HWND hwnd, WPARAM wParam, LPARAM lParam);

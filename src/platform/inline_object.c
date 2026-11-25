@@ -116,7 +116,7 @@ static HRESULT STDMETHODCALLTYPE mc_badge_draw(MC_IDWriteInlineObject *This,
             col = mc_argb_to_d2d(fg);
             MC_CALL(ds->brush, SetColor, &col);
             MC_CALL(ds->rt, DrawTextLayout, pt, self->label_layout,
-                    MC_AS(ID2D1Brush, ds->brush), D2D1_DRAW_TEXT_OPTIONS_NONE);
+                    MC_AS(ID2D1Brush, ds->brush), ds->text_options);
         }
     }
     return S_OK;

@@ -187,7 +187,7 @@ static void load_sample_csharp(monac_editor_t *ed)
         L"{\n"
         L"    public static void Main(string[] args)\n"
         L"    {\n"
-        L"        var greeting = \"Hello from Monac C# LSP!\";\n"
+        L"        var greeting = \"Hello from Monac C# LSP! \U0001F680\u2728\";\n"
         L"        Console.\n"
         L"        UnknownMethod();\n"
         L"    }\n"

@@ -224,6 +224,12 @@ EXTRA_GUID_SOURCES = [
     ("d2d1_1.h", [
         "IID_ID2D1DeviceContext",
     ]),
+    ("d2d1_2.h", [
+        "IID_ID2D1DeviceContext1",
+    ]),
+    ("dwrite_2.h", [
+        "IID_IDWriteFactory2",
+    ]),
     ("wincodec.h", [
         "CLSID_WICImagingFactory",
         "IID_IWICImagingFactory",

@@ -5,7 +5,7 @@
 #include <string.h>
 
 static const wchar_t SAMPLE_JSONC[] =
-    L"// Monac JSONC Demo: Syntax Highlight, Inline/Multiline Folding & Soft Wrap\n"
+    L"// \U0001F680 Monac JSONC Demo: Highlight, Folding, Soft Wrap & Color Emoji \U0001F3A8\n"
     L"{\n"
     L"  /* Inline nested objects and arrays on a single line */\n"
     L"  \"config\": {\"timeout\": 3000, \"retry\": [1, 2, 3], \"tags\": [\"c17\", \"d2d\", \"dwrite\"]},\n"
@@ -14,6 +14,7 @@ static const wchar_t SAMPLE_JSONC[] =
     L"    \"retry\": 5,\n"
     L"    \"enabled\": true,\n"
     L"    \"fallback\": null,\n"
+    L"    \"emoji\": \"\U0001F680 \U0001F525 \u2705 \u26A1 \U0001F389 \U0001F3A8 \U0001F41B \U0001F468\u200D\U0001F4BB\",\n"
     L"    \"endpoints\": [\n"
     L"      {\"host\": \"127.0.0.1\", \"port\": 8080},\n"
     L"      {\"host\": \"127.0.0.1\", \"port\": 8081},\n"
@@ -81,7 +82,7 @@ static HWND create_host_window(demo_app *app, int x, int y, int w, int h, bool v
 static void setup_sample_document(monac_editor_t *ed)
 {
     monac_inlay_t inlays[2] = {
-        { { 3, 28 }, L" ms", 0xFF9AA5B1u, 0xFF262A34u },
+        { { 3, 28 }, L" \u26A1ms", 0xFF9AA5B1u, 0xFF262A34u },
         { { 6, 15 }, L" attempts", 0xFF9AA5B1u, 0xFF262A34u }
     };
     monac_set_language(ed, L"json");
@@ -114,11 +115,11 @@ static int run_selftest(void)
     mc_demo_pump_messages();
 
     /* Step 1: Initial load assertions */
-    MC_ST_CHECK_EQ(&st, 16, monac_get_line_count(app.ed));
+    MC_ST_CHECK_EQ(&st, 17, monac_get_line_count(app.ed));
     MC_ST_CHECK(&st, monac_get_line_token_count(app.ed, 3) >= 10);
     MC_ST_CHECK(&st, monac_fold_get_count(app.ed) >= 6);
     initial_vlines = monac_get_view_line_count(app.ed);
-    MC_ST_CHECK_EQ(&st, 16, initial_vlines);
+    MC_ST_CHECK_EQ(&st, 17, initial_vlines);
     MC_ST_CHECK(&st, mc_demo_capture_step(app.ed, "demo_json_fold", "01_initial", w, h));
 
     /* Step 2: Collapse inline fold {"timeout": 3000, ...} on line 3 AND multiline "endpoints" array */
@@ -127,12 +128,12 @@ static int run_selftest(void)
                                 (monac_range_t){ { 3, 12 }, { 3, 86 } },
                                 L"{\x2026}", true);
     multi_fid = monac_fold_add(app.ed,
-                               (monac_range_t){ { 9, 17 }, { 12, 5 } },
+                               (monac_range_t){ { 10, 17 }, { 13, 5 } },
                                L"[\x2026]", true);
     MC_ST_CHECK(&st, inline_fid != 0 && multi_fid != 0);
     MC_ST_CHECK(&st, monac_fold_is_collapsed(app.ed, inline_fid));
     MC_ST_CHECK(&st, monac_fold_is_collapsed(app.ed, multi_fid));
-    MC_ST_CHECK_EQ(&st, 13, monac_get_view_line_count(app.ed));
+    MC_ST_CHECK_EQ(&st, 14, monac_get_view_line_count(app.ed));
 
     /* Check projected view line 3 has placeholder U+FFFC and model_to_view works */
     {
@@ -159,10 +160,10 @@ static int run_selftest(void)
 
     /* Step 4: Toggle soft wrap ON -> view line count increases & roundtrips on wrapped line */
     monac_set_wrap_mode(app.ed, MONAC_WRAP_WORD);
-    MC_ST_CHECK(&st, monac_get_view_line_count(app.ed) >= 15);
-    MC_ST_CHECK(&st, monac_model_to_view(app.ed, (monac_pos_t){ 14, 150 }, &vp));
+    MC_ST_CHECK(&st, monac_get_view_line_count(app.ed) >= 16);
+    MC_ST_CHECK(&st, monac_model_to_view(app.ed, (monac_pos_t){ 15, 150 }, &vp));
     MC_ST_CHECK(&st, monac_view_to_model(app.ed, vp, &mp, NULL));
-    MC_ST_CHECK_EQ(&st, 14, mp.line);
+    MC_ST_CHECK_EQ(&st, 15, mp.line);
     MC_ST_CHECK_EQ(&st, 150, mp.col);
     MC_ST_CHECK(&st, mc_demo_capture_step(app.ed, "demo_json_fold", "04_softwrap", w, h));
 

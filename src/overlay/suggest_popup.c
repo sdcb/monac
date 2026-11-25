@@ -242,7 +242,8 @@ void mc_suggest_draw(monac_editor_t *ed, MC_ID2D1RenderTarget *rt,
             col = mc_ov_color(fidx == st->selected ? 0xFFFFFFFFu : 0xFFCDD6F4u);
             MC_CALL(brush, SetColor, &col);
             MC_CALL(rt, DrawText, item->label, (UINT32)wcslen(item->label), fmt, &lrc,
-                    MC_AS(ID2D1Brush, brush), D2D1_DRAW_TEXT_OPTIONS_CLIP,
+                    MC_AS(ID2D1Brush, brush),
+                    mc_editor_text_options(ed, D2D1_DRAW_TEXT_OPTIONS_CLIP),
                     DWRITE_MEASURING_MODE_NATURAL);
         }
 
@@ -252,7 +253,8 @@ void mc_suggest_draw(monac_editor_t *ed, MC_ID2D1RenderTarget *rt,
             col = mc_ov_color(0xFF7F849Cu);
             MC_CALL(brush, SetColor, &col);
             MC_CALL(rt, DrawText, item->detail, (UINT32)wcslen(item->detail), fmt, &drc,
-                    MC_AS(ID2D1Brush, brush), D2D1_DRAW_TEXT_OPTIONS_CLIP,
+                    MC_AS(ID2D1Brush, brush),
+                    mc_editor_text_options(ed, D2D1_DRAW_TEXT_OPTIONS_CLIP),
                     DWRITE_MEASURING_MODE_NATURAL);
         }
     }

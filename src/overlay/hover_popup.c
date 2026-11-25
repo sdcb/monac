@@ -92,7 +92,7 @@ void mc_hover_draw(monac_editor_t *ed, MC_ID2D1RenderTarget *rt,
     pt.x = x + pad;
     pt.y = y + pad;
     MC_CALL(rt, DrawTextLayout, pt, layout, MC_AS(ID2D1Brush, brush),
-            D2D1_DRAW_TEXT_OPTIONS_CLIP);
+            mc_editor_text_options(ed, D2D1_DRAW_TEXT_OPTIONS_CLIP));
 
     MC_SAFE_RELEASE(layout);
 }

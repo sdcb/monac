@@ -20,6 +20,7 @@ typedef struct mc_inline_draw_state_t {
     uint32_t hovered_fold_id;
     float origin_offset_x;
     float origin_offset_y;
+    D2D1_DRAW_TEXT_OPTIONS text_options;
 } mc_inline_draw_state_t;
 
 typedef struct mc_inline_badge mc_inline_badge;
