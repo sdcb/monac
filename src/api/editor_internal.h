@@ -159,6 +159,7 @@ LRESULT mc_ime_handle_message(monac_editor_t *ed, HWND hwnd, UINT msg,
 /* Overlay hooks (stubbed in Phase 5, implemented in Phase 6) */
 void mc_overlays_init(monac_editor_t *ed);
 void mc_overlays_destroy(monac_editor_t *ed);
+void mc_overlays_on_text_changed(monac_editor_t *ed);
 void mc_overlays_draw(monac_editor_t *ed, MC_ID2D1RenderTarget *rt,
                       MC_ID2D1SolidColorBrush *brush);
 bool mc_overlays_handle_keydown(monac_editor_t *ed, WPARAM vk, bool ctrl, bool shift, bool alt);

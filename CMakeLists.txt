@@ -76,7 +76,9 @@ set(MONAC_EDITOR_SOURCES
     src/platform/ime_win32.c
     src/platform/win32_host.c
     src/platform/uia_stub.c
-    src/overlay/overlay_stub.c
+    src/overlay/suggest_popup.c
+    src/overlay/hover_popup.c
+    src/overlay/find_bar.c
     src/api/monac_api.c
     src/api/monac_win32.c
 )

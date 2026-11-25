@@ -76,9 +76,62 @@ static void test_win32_control_messages(void)
     DestroyWindow(hwnd);
 }
 
+static void test_builtin_d2d_overlays(void)
+{
+    monac_editor_t *ed = monac_create(NULL);
+    monac_completion_item_t items[3] = {
+        { L"WriteLine", L"void", L"WriteLine()", MONAC_COMPLETION_METHOD, false, { {0,0},{0,0} } },
+        { L"Write", L"void", L"Write()", MONAC_COMPLETION_METHOD, false, { {0,0},{0,0} } },
+        { L"ReadLine", L"string", L"ReadLine()", MONAC_COMPLETION_METHOD, false, { {0,0},{0,0} } }
+    };
+    uint8_t *pixels = (uint8_t *)calloc(640u * 360u * 4u, 1);
+    wchar_t buf[128];
+
+    MT_ASSERT(ed != NULL && pixels != NULL);
+    monac_set_text(ed, L"Console.\nConsole.Write", 22);
+    {
+        monac_selection_t sel = { { 0, 8 }, { 0, 8 } };
+        monac_set_selections(ed, &sel, 1);
+    }
+
+    /* Suggest popup show, live filter, render, and accept */
+    monac_suggest_show(ed, (monac_pos_t){ 0, 8 }, items, 3);
+    MT_ASSERT(monac_suggest_is_visible(ed));
+    MT_ASSERT_EQ(3, monac_suggest_get_count(ed));
+    monac_insert_text_at_cursors(ed, L"Wr", 2);
+    MT_ASSERT_EQ(2, monac_suggest_get_count(ed));
+    MT_ASSERT(monac_render_to_bgra(ed, 640, 360, pixels, 640 * 4));
+    MT_ASSERT(monac_suggest_accept(ed));
+    MT_ASSERT(!monac_suggest_is_visible(ed));
+    MT_ASSERT(monac_get_line(ed, 0, buf, 128) == 19);
+    buf[19] = L'\0';
+    MT_ASSERT_WSTR_EQ(L"Console.WriteLine()", buf);
+
+    /* Hover popup show, render, query, hide */
+    monac_hover_show(ed, (monac_pos_t){ 0, 10 }, L"void Console.WriteLine()\nWrites a line.");
+    MT_ASSERT(monac_hover_is_visible(ed));
+    MT_ASSERT(monac_hover_get_text(ed, buf, 128) > 0);
+    MT_ASSERT(monac_render_to_bgra(ed, 640, 360, pixels, 640 * 4));
+    monac_hover_hide(ed);
+    MT_ASSERT(!monac_hover_is_visible(ed));
+
+    /* Find bar open, set query, match count, render, close */
+    monac_find_bar_open(ed, true);
+    MT_ASSERT(monac_find_bar_is_open(ed));
+    monac_find_bar_set_query(ed, L"Console");
+    MT_ASSERT_EQ(2, monac_find_bar_get_match_count(ed));
+    MT_ASSERT(monac_render_to_bgra(ed, 640, 360, pixels, 640 * 4));
+    monac_find_bar_close(ed);
+    MT_ASSERT(!monac_find_bar_is_open(ed));
+
+    free(pixels);
+    monac_destroy(ed);
+}
+
 int main(void)
 {
     MT_RUN(test_dll_api_and_offscreen_render);
     MT_RUN(test_win32_control_messages);
+    MT_RUN(test_builtin_d2d_overlays);
     return MT_FINISH();
 }

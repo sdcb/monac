@@ -118,6 +118,7 @@ void mc_editor_notify_text_changed(monac_editor_t *ed, uint64_t version_id,
                                     mc_pt_line_count(&ed->doc.tree));
     ++ed->syntax_version;
     mc_renderer_invalidate_layouts(ed);
+    mc_overlays_on_text_changed(ed);
     mc_editor_invalidate_view(ed);
     mc_uia_raise_text_changed(ed);
     if (ed->callbacks.on_text_changed != NULL) {
