@@ -32,6 +32,8 @@ add_library(monac_core_base STATIC
     src/core/folding.c
     src/core/cursor.c
     src/core/search.c
+    src/lexer/lexer.c
+    src/lexer/lexer_json.c
 )
 target_include_directories(monac_core_base PUBLIC include src)
 
@@ -97,4 +99,8 @@ if(BUILD_TESTING)
     add_executable(test_projection tests/test_projection.c)
     target_link_libraries(test_projection PRIVATE monac_core_dwrite)
     add_test(NAME test_projection COMMAND test_projection)
+
+    add_executable(test_lexer_json tests/test_lexer_json.c)
+    target_link_libraries(test_lexer_json PRIVATE monac_core_base)
+    add_test(NAME test_lexer_json COMMAND test_lexer_json)
 endif()
