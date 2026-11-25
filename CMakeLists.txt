@@ -28,6 +28,10 @@ add_library(monac_core_base STATIC
     src/base/utf.c
     src/core/piece_tree.c
     src/core/edit_stack.c
+    src/core/decorations.c
+    src/core/folding.c
+    src/core/cursor.c
+    src/core/search.c
 )
 target_include_directories(monac_core_base PUBLIC include src)
 
@@ -62,4 +66,16 @@ if(BUILD_TESTING)
     add_executable(test_edit_stack tests/test_edit_stack.c)
     target_link_libraries(test_edit_stack PRIVATE monac_core_base)
     add_test(NAME test_edit_stack COMMAND test_edit_stack)
+
+    add_executable(test_decorations tests/test_decorations.c)
+    target_link_libraries(test_decorations PRIVATE monac_core_base)
+    add_test(NAME test_decorations COMMAND test_decorations)
+
+    add_executable(test_folding tests/test_folding.c)
+    target_link_libraries(test_folding PRIVATE monac_core_base)
+    add_test(NAME test_folding COMMAND test_folding)
+
+    add_executable(test_cursor_search tests/test_cursor_search.c)
+    target_link_libraries(test_cursor_search PRIVATE monac_core_base)
+    add_test(NAME test_cursor_search COMMAND test_cursor_search)
 endif()
