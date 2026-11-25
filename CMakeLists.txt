@@ -22,6 +22,15 @@ endif()
 
 include(CTest)
 
+add_library(monac_core_base STATIC
+    src/base/arena.c
+    src/base/strbuf.c
+    src/base/utf.c
+    src/core/piece_tree.c
+    src/core/edit_stack.c
+)
+target_include_directories(monac_core_base PUBLIC include src)
+
 add_library(monac_platform_shim STATIC
     src/platform/iids.c
 )
@@ -37,4 +46,20 @@ if(BUILD_TESTING)
     add_executable(test_shim_compile tests/test_shim_compile.c)
     target_link_libraries(test_shim_compile PRIVATE monac_platform_shim d2d1 dwrite ole32)
     add_test(NAME test_shim_compile COMMAND test_shim_compile)
+
+    add_executable(test_base tests/test_base.c)
+    target_link_libraries(test_base PRIVATE monac_core_base)
+    add_test(NAME test_base COMMAND test_base)
+
+    add_executable(test_utf tests/test_utf.c)
+    target_link_libraries(test_utf PRIVATE monac_core_base)
+    add_test(NAME test_utf COMMAND test_utf)
+
+    add_executable(test_piece_tree tests/test_piece_tree.c)
+    target_link_libraries(test_piece_tree PRIVATE monac_core_base)
+    add_test(NAME test_piece_tree COMMAND test_piece_tree)
+
+    add_executable(test_edit_stack tests/test_edit_stack.c)
+    target_link_libraries(test_edit_stack PRIVATE monac_core_base)
+    add_test(NAME test_edit_stack COMMAND test_edit_stack)
 endif()
