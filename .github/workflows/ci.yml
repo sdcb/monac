@@ -17,10 +17,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup .NET 10 SDK (for csharp-ls E2E test)
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.0.x"
 
@@ -31,9 +31,28 @@ jobs:
           "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           dotnet build examples/csharp_sample/Sample.csproj
 
-      - name: Setup MSVC
+      - name: Setup MSVC (vcvars64)
         if: matrix.toolchain == 'msvc'
-        uses: ilammy/msvc-dev-cmd@v1
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $vsPath = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          if (-not $vsPath) { throw "Visual Studio with C++ x64 tools not found" }
+          $vcvars = Join-Path $vsPath "VC\Auxiliary\Build\vcvars64.bat"
+          $origPaths = ($env:PATH -split ';') | ForEach-Object { $_.TrimEnd('\').ToLowerInvariant() }
+          $envDump = & cmd.exe /c "`"$vcvars`" >nul && set"
+          foreach ($line in $envDump) {
+            $idx = $line.IndexOf('=')
+            if ($idx -le 0) { continue }
+            $name = $line.Substring(0, $idx)
+            $val = $line.Substring($idx + 1)
+            if ($name -ieq "PATH") {
+              $newPaths = ($val -split ';') | Where-Object { $_ -and ($origPaths -notcontains $_.TrimEnd('\').ToLowerInvariant()) }
+              $newPaths | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+            } elseif ($name -match '^(INCLUDE|LIB|LIBPATH|VC|WindowsSDK|UniversalCRTSdk|UCRT|VCTools|DevEnv|Framework|EXTERNAL_INCLUDE)') {
+              "$name=$val" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            }
+          }
 
       - name: Setup MinGW-w64 (niXman win32-seh-msvcrt) & Ninja
         if: matrix.toolchain == 'mingw'
@@ -93,7 +112,7 @@ jobs:
           }
 
       - name: Upload Demo Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: monac-demo-${{ matrix.toolchain }}
           path: build-${{ matrix.toolchain }}/demo/*.exe
