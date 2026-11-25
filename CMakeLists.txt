@@ -40,6 +40,17 @@ add_library(monac_platform_shim STATIC
 )
 target_include_directories(monac_platform_shim PUBLIC include src)
 
+add_library(monac_core_dwrite STATIC
+    src/platform/dw_text.c
+    src/platform/inline_object.c
+    src/core/fenwick.c
+    src/core/line_wrap.c
+    src/core/projection.c
+    src/core/document.c
+)
+target_include_directories(monac_core_dwrite PUBLIC include src)
+target_link_libraries(monac_core_dwrite PUBLIC monac_core_base monac_platform_shim dwrite d2d1)
+
 if(BUILD_TESTING)
     if(MINGW)
         add_executable(test_shim_layout tests/test_shim_layout.c)
@@ -78,4 +89,12 @@ if(BUILD_TESTING)
     add_executable(test_cursor_search tests/test_cursor_search.c)
     target_link_libraries(test_cursor_search PRIVATE monac_core_base)
     add_test(NAME test_cursor_search COMMAND test_cursor_search)
+
+    add_executable(test_wrap tests/test_wrap.c)
+    target_link_libraries(test_wrap PRIVATE monac_core_dwrite)
+    add_test(NAME test_wrap COMMAND test_wrap)
+
+    add_executable(test_projection tests/test_projection.c)
+    target_link_libraries(test_projection PRIVATE monac_core_dwrite)
+    add_test(NAME test_projection COMMAND test_projection)
 endif()
