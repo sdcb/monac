@@ -166,11 +166,18 @@ static void resolve_server_command(int argc, wchar_t **argv, wchar_t *cmd_out, s
     }
     {
         wchar_t exe[MAX_PATH];
+        wchar_t candidate[MAX_PATH];
         wchar_t *slash;
         GetModuleFileNameW(NULL, exe, MAX_PATH);
         slash = wcsrchr(exe, L'\\');
         if (slash) *slash = L'\0';
-        _snwprintf(cmd_out, cap, L"\"%ls\\mock_lsp_server.exe\"", exe);
+        _snwprintf(candidate, MAX_PATH, L"%ls\\mock_lsp_server.exe", exe);
+        candidate[MAX_PATH - 1] = L'\0';
+        if (GetFileAttributesW(candidate) == INVALID_FILE_ATTRIBUTES) {
+            _snwprintf(candidate, MAX_PATH, L"%ls\\..\\test\\mock_lsp_server.exe", exe);
+            candidate[MAX_PATH - 1] = L'\0';
+        }
+        _snwprintf(cmd_out, cap, L"\"%ls\"", candidate);
         cmd_out[cap - 1] = L'\0';
     }
 }
