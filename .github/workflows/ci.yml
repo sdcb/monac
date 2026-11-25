@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: ${{ matrix.toolchain }} (Release)
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        toolchain: [msvc, mingw]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10 SDK (for csharp-ls E2E test)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+
+      - name: Install csharp-ls and restore sample project
+        shell: pwsh
+        run: |
+          dotnet tool install -g csharp-ls
+          "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          dotnet build examples/csharp_sample/Sample.csproj
+
+      - name: Setup MSVC
+        if: matrix.toolchain == 'msvc'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Setup MinGW-w64 (MSYS2 MINGW64 / msvcrt)
+        if: matrix.toolchain == 'mingw'
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: false
+          install: >-
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-ninja
+
+      - name: Configure & Build (MSVC)
+        if: matrix.toolchain == 'msvc'
+        shell: pwsh
+        run: |
+          cmake -B build-msvc -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_C_COMPILER=cl.exe
+          cmake --build build-msvc
+
+      - name: Configure & Build (MinGW)
+        if: matrix.toolchain == 'mingw'
+        shell: pwsh
+        run: |
+          $env:PATH = "C:\msys64\mingw64\bin;$env:PATH"
+          cmake -B build-mingw -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release `
+            -DCMAKE_C_COMPILER=C:/msys64/mingw64/bin/gcc.exe `
+            -DCMAKE_AR=C:/msys64/mingw64/bin/gcc-ar.exe `
+            -DCMAKE_RANLIB=C:/msys64/mingw64/bin/gcc-ranlib.exe
+          cmake --build build-mingw
+
+      - name: Run Tests
+        shell: pwsh
+        run: |
+          if ("${{ matrix.toolchain }}" -eq "mingw") {
+            $env:PATH = "C:\msys64\mingw64\bin;$env:PATH"
+          }
+          ctest --test-dir build-${{ matrix.toolchain }} --output-on-failure
+
+      - name: Verify Demo Standalone Imports
+        shell: pwsh
+        run: |
+          $demos = Get-ChildItem "build-${{ matrix.toolchain }}\demo\*.exe"
+          $demos | Format-Table Name, Length -AutoSize
+          if ("${{ matrix.toolchain }}" -eq "mingw") {
+            $imports = & C:\msys64\mingw64\bin\objdump.exe -p $demos.FullName | Select-String "DLL Name"
+          } else {
+            $imports = & dumpbin /imports $demos.FullName | Select-String "\.dll"
+          }
+          $imports
+          if ($imports | Select-String -Pattern "monac\.dll|monac_lsp\.dll|libgcc|libwinpthread|vcruntime|shcore" -CaseSensitive:$false) {
+            Write-Error "Unexpected non-Win7 or non-static DLL dependency detected in demo binaries!"
+            exit 1
+          }
+
+      - name: Upload Demo Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: monac-demo-${{ matrix.toolchain }}
+          path: build-${{ matrix.toolchain }}/demo/*.exe
+          if-no-files-found: error
