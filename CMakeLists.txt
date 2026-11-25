@@ -110,6 +110,52 @@ add_executable(demo_json_fold
 )
 target_link_libraries(demo_json_fold PRIVATE monac user32 ole32 shell32 windowscodecs)
 
+# Independent monac_lsp library (depends ONLY on public monac.h API)
+set(MONAC_LSP_SOURCES
+    src/base/arena.c
+    src/base/strbuf.c
+    src/base/utf.c
+    src/base/json_mini.c
+    src/lsp/lsp_queue.c
+    src/lsp/lsp_transport.c
+    src/lsp/lsp_client.c
+)
+
+add_library(monac_lsp STATIC ${MONAC_LSP_SOURCES})
+target_include_directories(monac_lsp PUBLIC include PRIVATE src)
+target_compile_definitions(monac_lsp PUBLIC MONAC_LSP_STATIC)
+target_link_libraries(monac_lsp PUBLIC monac kernel32)
+
+add_library(monac_lsp_dll SHARED ${MONAC_LSP_SOURCES})
+target_include_directories(monac_lsp_dll PUBLIC include PRIVATE src)
+target_compile_definitions(monac_lsp_dll PRIVATE MONAC_LSP_BUILDING_DLL)
+target_link_libraries(monac_lsp_dll PRIVATE monac kernel32)
+set_target_properties(monac_lsp_dll PROPERTIES
+    PREFIX ""
+    OUTPUT_NAME "monac_lsp"
+    ARCHIVE_OUTPUT_NAME "monac_lsp_dll"
+)
+
+add_executable(mock_lsp_server
+    tests/mock_lsp_server.c
+    src/base/arena.c
+    src/base/strbuf.c
+    src/base/utf.c
+    src/base/json_mini.c
+    src/lsp/lsp_queue.c
+    src/lsp/lsp_transport.c
+)
+target_include_directories(mock_lsp_server PRIVATE include src)
+target_link_libraries(mock_lsp_server PRIVATE kernel32)
+
+add_executable(demo_lsp_csharp
+    examples/demo_common.c
+    examples/demo_lsp_csharp.c
+)
+target_compile_definitions(demo_lsp_csharp PRIVATE MONAC_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+target_link_libraries(demo_lsp_csharp PRIVATE monac_lsp monac user32 ole32 shell32 windowscodecs)
+add_dependencies(demo_lsp_csharp mock_lsp_server)
+
 if(BUILD_TESTING)
     if(MINGW)
         add_executable(test_shim_layout tests/test_shim_layout.c)
@@ -170,4 +216,35 @@ if(BUILD_TESTING)
     add_test(NAME test_uia COMMAND test_uia)
 
     add_test(NAME demo_json_fold_selftest COMMAND demo_json_fold --selftest)
+
+    add_executable(test_lsp_queue tests/test_lsp_queue.c src/lsp/lsp_queue.c)
+    target_include_directories(test_lsp_queue PRIVATE include src)
+    target_link_libraries(test_lsp_queue PRIVATE kernel32)
+    add_test(NAME test_lsp_queue COMMAND test_lsp_queue)
+
+    add_executable(test_lsp_jsonrpc
+        tests/test_lsp_jsonrpc.c
+        src/base/arena.c
+        src/base/strbuf.c
+        src/base/utf.c
+        src/base/json_mini.c
+        src/lsp/lsp_queue.c
+        src/lsp/lsp_transport.c
+    )
+    target_include_directories(test_lsp_jsonrpc PRIVATE include src)
+    target_link_libraries(test_lsp_jsonrpc PRIVATE kernel32)
+    add_test(NAME test_lsp_jsonrpc COMMAND test_lsp_jsonrpc)
+
+    add_executable(test_lsp_e2e tests/test_lsp_e2e.c)
+    target_link_libraries(test_lsp_e2e PRIVATE monac_lsp monac kernel32)
+    add_dependencies(test_lsp_e2e mock_lsp_server)
+    add_test(NAME test_lsp_e2e COMMAND test_lsp_e2e)
+
+    add_executable(test_lsp_csharp_real tests/test_lsp_csharp_real.c)
+    target_compile_definitions(test_lsp_csharp_real PRIVATE MONAC_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+    target_link_libraries(test_lsp_csharp_real PRIVATE monac_lsp monac kernel32)
+    add_test(NAME test_lsp_csharp_real COMMAND test_lsp_csharp_real)
+    set_tests_properties(test_lsp_csharp_real PROPERTIES TIMEOUT 120)
+
+    add_test(NAME demo_lsp_csharp_selftest COMMAND demo_lsp_csharp --mock --selftest)
 endif()

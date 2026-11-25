@@ -280,6 +280,8 @@ MONAC_API void monac_suggest_show(monac_editor_t *ed, monac_pos_t anchor,
 MONAC_API void monac_suggest_hide(monac_editor_t *ed);
 MONAC_API bool monac_suggest_is_visible(const monac_editor_t *ed);
 MONAC_API size_t monac_suggest_get_count(const monac_editor_t *ed);
+MONAC_API size_t monac_suggest_get_label(const monac_editor_t *ed, size_t index,
+                                         wchar_t *buf, size_t cap);
 MONAC_API bool monac_suggest_accept(monac_editor_t *ed);
 
 MONAC_API void monac_hover_show(monac_editor_t *ed, monac_pos_t anchor,

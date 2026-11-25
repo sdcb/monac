@@ -7,7 +7,7 @@
 
 #define MC_SUGGEST_MAX_VISIBLE 8u
 #define MC_SUGGEST_ROW_H 22.0f
-#define MC_SUGGEST_WIDTH 300.0f
+#define MC_SUGGEST_WIDTH 380.0f
 
 static wchar_t *mc_sdup(const wchar_t *s)
 {
@@ -238,7 +238,7 @@ void mc_suggest_draw(monac_editor_t *ed, MC_ID2D1RenderTarget *rt,
 
         /* Label */
         if (item->label != NULL) {
-            D2D1_RECT_F lrc = { x + 30.0f, ry + 2.0f, x + w - 90.0f, ry + MC_SUGGEST_ROW_H };
+            D2D1_RECT_F lrc = { x + 30.0f, ry + 2.0f, x + 165.0f, ry + MC_SUGGEST_ROW_H };
             col = mc_ov_color(fidx == st->selected ? 0xFFFFFFFFu : 0xFFCDD6F4u);
             MC_CALL(brush, SetColor, &col);
             MC_CALL(rt, DrawText, item->label, (UINT32)wcslen(item->label), fmt, &lrc,
@@ -246,16 +246,14 @@ void mc_suggest_draw(monac_editor_t *ed, MC_ID2D1RenderTarget *rt,
                     DWRITE_MEASURING_MODE_NATURAL);
         }
 
-        /* Detail (right-aligned muted) */
+        /* Detail (muted) */
         if (item->detail != NULL && item->detail[0] != L'\0') {
-            D2D1_RECT_F drc = { x + w - 90.0f, ry + 2.0f, x + w - 10.0f, ry + MC_SUGGEST_ROW_H };
+            D2D1_RECT_F drc = { x + 170.0f, ry + 2.0f, x + w - 10.0f, ry + MC_SUGGEST_ROW_H };
             col = mc_ov_color(0xFF7F849Cu);
             MC_CALL(brush, SetColor, &col);
-            (void)MC_CALL(fmt, SetTextAlignment, DWRITE_TEXT_ALIGNMENT_TRAILING);
             MC_CALL(rt, DrawText, item->detail, (UINT32)wcslen(item->detail), fmt, &drc,
                     MC_AS(ID2D1Brush, brush), D2D1_DRAW_TEXT_OPTIONS_CLIP,
                     DWRITE_MEASURING_MODE_NATURAL);
-            (void)MC_CALL(fmt, SetTextAlignment, DWRITE_TEXT_ALIGNMENT_LEADING);
         }
     }
 
@@ -403,6 +401,24 @@ MONAC_API size_t monac_suggest_get_count(const monac_editor_t *ed)
 {
     if (ed == NULL || ed->suggest == NULL || !ed->suggest->visible) return 0;
     return ed->suggest->filtered_count;
+}
+
+MONAC_API size_t monac_suggest_get_label(const monac_editor_t *ed, size_t index,
+                                         wchar_t *buf, size_t cap)
+{
+    const wchar_t *lbl;
+    size_t len;
+    if (ed == NULL || ed->suggest == NULL || !ed->suggest->visible ||
+        index >= ed->suggest->filtered_count) return 0;
+    lbl = ed->suggest->items[ed->suggest->filtered[index]].label;
+    if (lbl == NULL) return 0;
+    len = wcslen(lbl);
+    if (buf != NULL && cap > 0) {
+        size_t n = len < cap - 1 ? len : cap - 1;
+        if (n > 0) memcpy(buf, lbl, n * sizeof(wchar_t));
+        buf[n] = L'\0';
+    }
+    return len;
 }
 
 MONAC_API bool monac_suggest_accept(monac_editor_t *ed)

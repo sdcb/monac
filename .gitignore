@@ -1,5 +1,7 @@
 /build-*/
 /artifacts/
+examples/csharp_sample/bin/
+examples/csharp_sample/obj/
 __pycache__/
 *.pyc
 *.user
