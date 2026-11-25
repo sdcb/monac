@@ -35,15 +35,21 @@ jobs:
         if: matrix.toolchain == 'msvc'
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Setup MinGW-w64 (MSYS2 MINGW64 / msvcrt)
+      - name: Setup MinGW-w64 (niXman win32-seh-msvcrt) & Ninja
         if: matrix.toolchain == 'mingw'
-        uses: msys2/setup-msys2@v2
-        with:
-          msystem: MINGW64
-          update: false
-          install: >-
-            mingw-w64-x86_64-gcc
-            mingw-w64-x86_64-ninja
+        shell: pwsh
+        run: |
+          $url = "https://github.com/niXman/mingw-builds-binaries/releases/download/16.2.0-rt_v14-rev1/x86_64-16.2.0-release-win32-seh-msvcrt-rt_v14-rev1.7z"
+          $archive = "$env:RUNNER_TEMP\mingw.7z"
+          $dest = "C:\mingw-dist"
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          7z x $archive "-o$dest" -y | Out-Null
+          if (-not (Get-Command ninja -ErrorAction SilentlyContinue)) {
+            $ninjaZip = "$env:RUNNER_TEMP\ninja.zip"
+            Invoke-WebRequest -Uri "https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-win.zip" -OutFile $ninjaZip
+            Expand-Archive -Path $ninjaZip -DestinationPath "$dest\mingw64\bin" -Force
+          }
+          "$dest\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
       - name: Configure & Build (MSVC)
         if: matrix.toolchain == 'msvc'
@@ -58,20 +64,16 @@ jobs:
         if: matrix.toolchain == 'mingw'
         shell: pwsh
         run: |
-          $env:PATH = "C:\msys64\mingw64\bin;$env:PATH"
           cmake -B build-mingw -G Ninja `
             -DCMAKE_BUILD_TYPE=Release `
-            -DCMAKE_C_COMPILER=C:/msys64/mingw64/bin/gcc.exe `
-            -DCMAKE_AR=C:/msys64/mingw64/bin/gcc-ar.exe `
-            -DCMAKE_RANLIB=C:/msys64/mingw64/bin/gcc-ranlib.exe
+            -DCMAKE_C_COMPILER=C:/mingw-dist/mingw64/bin/gcc.exe `
+            -DCMAKE_AR=C:/mingw-dist/mingw64/bin/gcc-ar.exe `
+            -DCMAKE_RANLIB=C:/mingw-dist/mingw64/bin/gcc-ranlib.exe
           cmake --build build-mingw
 
       - name: Run Tests
         shell: pwsh
         run: |
-          if ("${{ matrix.toolchain }}" -eq "mingw") {
-            $env:PATH = "C:\msys64\mingw64\bin;$env:PATH"
-          }
           ctest --test-dir build-${{ matrix.toolchain }} --output-on-failure
 
       - name: Verify Demo Standalone Imports
@@ -80,7 +82,7 @@ jobs:
           $demos = Get-ChildItem "build-${{ matrix.toolchain }}\demo\*.exe"
           $demos | Format-Table Name, Length -AutoSize
           if ("${{ matrix.toolchain }}" -eq "mingw") {
-            $imports = & C:\msys64\mingw64\bin\objdump.exe -p $demos.FullName | Select-String "DLL Name"
+            $imports = & C:\mingw-dist\mingw64\bin\objdump.exe -p $demos.FullName | Select-String "DLL Name"
           } else {
             $imports = & dumpbin /imports $demos.FullName | Select-String "\.dll"
           }
