@@ -75,7 +75,7 @@ set(MONAC_EDITOR_SOURCES
     src/platform/d2d_renderer.c
     src/platform/ime_win32.c
     src/platform/win32_host.c
-    src/platform/uia_stub.c
+    src/platform/uia_provider.c
     src/overlay/suggest_popup.c
     src/overlay/hover_popup.c
     src/overlay/find_bar.c
@@ -83,7 +83,7 @@ set(MONAC_EDITOR_SOURCES
     src/api/monac_win32.c
 )
 
-set(MONAC_SYS_LIBS kernel32 user32 gdi32 imm32 ole32 oleaut32 d2d1 dwrite)
+set(MONAC_SYS_LIBS kernel32 user32 gdi32 imm32 ole32 oleaut32 uiautomationcore d2d1 dwrite)
 
 add_library(monac SHARED ${MONAC_EDITOR_SOURCES})
 target_include_directories(monac PUBLIC include PRIVATE src)
@@ -158,4 +158,8 @@ if(BUILD_TESTING)
     add_executable(test_monac_dll tests/test_monac_dll.c)
     target_link_libraries(test_monac_dll PRIVATE monac user32)
     add_test(NAME test_monac_dll COMMAND test_monac_dll)
+
+    add_executable(test_uia tests/test_uia.c)
+    target_link_libraries(test_uia PRIVATE monac user32 ole32 oleaut32)
+    add_test(NAME test_uia COMMAND test_uia)
 endif()
