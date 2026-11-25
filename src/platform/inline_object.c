@@ -80,8 +80,8 @@ static HRESULT STDMETHODCALLTYPE mc_badge_draw(MC_IDWriteInlineObject *This,
     if (ds == NULL || ds->rt == NULL || ds->brush == NULL) return S_OK;
 
     {
-        float x = originX + ds->origin_offset_x;
-        float y = originY + ds->origin_offset_y;
+        float x = originX;
+        float y = originY;
         bool hovered = (self->kind == MC_INLINE_FOLD_BADGE &&
                         self->fold_id != 0 &&
                         self->fold_id == ds->hovered_fold_id);

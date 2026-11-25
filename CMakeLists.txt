@@ -104,6 +104,12 @@ set_target_properties(monac_static PROPERTIES OUTPUT_NAME "monac")
 add_executable(bench_core tests/bench_core.c)
 target_link_libraries(bench_core PRIVATE monac_core_dwrite)
 
+add_executable(demo_json_fold
+    examples/demo_common.c
+    examples/demo_json_fold.c
+)
+target_link_libraries(demo_json_fold PRIVATE monac user32 ole32 shell32 windowscodecs)
+
 if(BUILD_TESTING)
     if(MINGW)
         add_executable(test_shim_layout tests/test_shim_layout.c)
@@ -162,4 +168,6 @@ if(BUILD_TESTING)
     add_executable(test_uia tests/test_uia.c)
     target_link_libraries(test_uia PRIVATE monac user32 ole32 oleaut32)
     add_test(NAME test_uia COMMAND test_uia)
+
+    add_test(NAME demo_json_fold_selftest COMMAND demo_json_fold --selftest)
 endif()
