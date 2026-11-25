@@ -213,11 +213,16 @@ static int run_selftest(void)
     return st.failures == 0 ? 0 : 1;
 }
 
-int main(void)
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+                   LPSTR lpCmdLine, int nCmdShow)
 {
     int argc = 0;
     wchar_t **argv;
     bool selftest;
+
+    (void)hInstance;
+    (void)hPrevInstance;
+    (void)lpCmdLine;
 
     mc_demo_enable_high_dpi();
     argv = CommandLineToArgvW(GetCommandLineW(), &argc);
@@ -245,7 +250,7 @@ int main(void)
                                     rc.right - rc.left, rc.bottom - rc.top);
         }
         setup_sample_document(app.ed);
-        ShowWindow(app.host_hwnd, SW_SHOW);
+        ShowWindow(app.host_hwnd, nCmdShow);
         UpdateWindow(app.host_hwnd);
         SetFocus(monac_get_hwnd(app.ed));
         while (GetMessageW(&msg, NULL, 0, 0) > 0) {

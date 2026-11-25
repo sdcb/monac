@@ -104,7 +104,7 @@ set_target_properties(monac_static PROPERTIES OUTPUT_NAME "monac")
 add_executable(bench_core tests/bench_core.c)
 target_link_libraries(bench_core PRIVATE monac_core_dwrite)
 
-add_executable(demo_json_fold
+add_executable(demo_json_fold WIN32
     examples/demo_common.c
     examples/demo_json_fold.c
 )
@@ -148,7 +148,7 @@ add_executable(mock_lsp_server
 target_include_directories(mock_lsp_server PRIVATE include src)
 target_link_libraries(mock_lsp_server PRIVATE kernel32)
 
-add_executable(demo_lsp_csharp
+add_executable(demo_lsp_csharp WIN32
     examples/demo_common.c
     examples/demo_lsp_csharp.c
 )
