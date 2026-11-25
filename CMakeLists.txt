@@ -53,6 +53,55 @@ add_library(monac_core_dwrite STATIC
 target_include_directories(monac_core_dwrite PUBLIC include src)
 target_link_libraries(monac_core_dwrite PUBLIC monac_core_base monac_platform_shim dwrite d2d1)
 
+set(MONAC_EDITOR_SOURCES
+    src/base/arena.c
+    src/base/strbuf.c
+    src/base/utf.c
+    src/core/piece_tree.c
+    src/core/edit_stack.c
+    src/core/decorations.c
+    src/core/folding.c
+    src/core/cursor.c
+    src/core/search.c
+    src/core/fenwick.c
+    src/core/line_wrap.c
+    src/core/projection.c
+    src/core/document.c
+    src/lexer/lexer.c
+    src/lexer/lexer_json.c
+    src/platform/iids.c
+    src/platform/dw_text.c
+    src/platform/inline_object.c
+    src/platform/d2d_renderer.c
+    src/platform/ime_win32.c
+    src/platform/win32_host.c
+    src/platform/uia_stub.c
+    src/overlay/overlay_stub.c
+    src/api/monac_api.c
+    src/api/monac_win32.c
+)
+
+set(MONAC_SYS_LIBS kernel32 user32 gdi32 imm32 ole32 oleaut32 d2d1 dwrite)
+
+add_library(monac SHARED ${MONAC_EDITOR_SOURCES})
+target_include_directories(monac PUBLIC include PRIVATE src)
+target_compile_definitions(monac PRIVATE MONAC_BUILDING_DLL)
+target_link_libraries(monac PRIVATE ${MONAC_SYS_LIBS})
+set_target_properties(monac PROPERTIES
+    PREFIX ""
+    OUTPUT_NAME "monac"
+    ARCHIVE_OUTPUT_NAME "monac_dll"
+)
+
+add_library(monac_static STATIC ${MONAC_EDITOR_SOURCES})
+target_include_directories(monac_static PUBLIC include PRIVATE src)
+target_compile_definitions(monac_static PUBLIC MONAC_STATIC)
+target_link_libraries(monac_static PUBLIC ${MONAC_SYS_LIBS})
+set_target_properties(monac_static PROPERTIES OUTPUT_NAME "monac")
+
+add_executable(bench_core tests/bench_core.c)
+target_link_libraries(bench_core PRIVATE monac_core_dwrite)
+
 if(BUILD_TESTING)
     if(MINGW)
         add_executable(test_shim_layout tests/test_shim_layout.c)
@@ -103,4 +152,8 @@ if(BUILD_TESTING)
     add_executable(test_lexer_json tests/test_lexer_json.c)
     target_link_libraries(test_lexer_json PRIVATE monac_core_base)
     add_test(NAME test_lexer_json COMMAND test_lexer_json)
+
+    add_executable(test_monac_dll tests/test_monac_dll.c)
+    target_link_libraries(test_monac_dll PRIVATE monac user32)
+    add_test(NAME test_monac_dll COMMAND test_monac_dll)
 endif()
