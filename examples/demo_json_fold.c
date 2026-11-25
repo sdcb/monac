@@ -33,6 +33,9 @@ static LRESULT CALLBACK host_wndproc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
     switch (msg) {
     case WM_ERASEBKGND:
         return 1;
+    case WM_DPICHANGED:
+        mc_demo_handle_dpi_changed(hwnd, app != NULL ? app->ed : NULL, wParam, lParam);
+        return 0;
     case WM_SIZE:
         if (app != NULL && app->ed != NULL) {
             monac_resize(app->ed, LOWORD(lParam), HIWORD(lParam));
@@ -145,8 +148,9 @@ static int run_selftest(void)
     /* Step 3: Click directly on inline fold badge coordinate -> expands! */
     MC_ST_CHECK(&st, monac_pos_to_client_rect(app.ed, (monac_pos_t){ 3, 12 }, &badge_rc));
     {
-        int click_x = (int)(badge_rc.left + 8.0f);
-        int click_y = (int)((badge_rc.top + badge_rc.bottom) * 0.5f);
+        float scale = (float)mc_demo_get_dpi(ed_hwnd) / 96.0f;
+        int click_x = (int)((badge_rc.left + 8.0f) * scale);
+        int click_y = (int)(((badge_rc.top + badge_rc.bottom) * 0.5f) * scale);
         SendMessageW(ed_hwnd, WM_LBUTTONDOWN, MK_LBUTTON, MAKELPARAM(click_x, click_y));
         SendMessageW(ed_hwnd, WM_LBUTTONUP, 0, MAKELPARAM(click_x, click_y));
     }
@@ -212,8 +216,12 @@ static int run_selftest(void)
 int main(void)
 {
     int argc = 0;
-    wchar_t **argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-    bool selftest = mc_demo_has_arg(argc, argv, L"--selftest");
+    wchar_t **argv;
+    bool selftest;
+
+    mc_demo_enable_high_dpi();
+    argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    selftest = mc_demo_has_arg(argc, argv, L"--selftest");
     if (argv != NULL) LocalFree(argv);
 
     if (selftest) {
@@ -223,8 +231,10 @@ int main(void)
     {
         demo_app app = { NULL, NULL };
         MSG msg;
+        int init_w = mc_demo_dip_to_px(NULL, 1024);
+        int init_h = mc_demo_dip_to_px(NULL, 680);
         app.host_hwnd = create_host_window(&app, CW_USEDEFAULT, CW_USEDEFAULT,
-                                           1024, 680, false);
+                                           init_w, init_h, false);
         if (app.host_hwnd == NULL) return 1;
         app.ed = monac_create(NULL);
         if (app.ed == NULL) return 1;

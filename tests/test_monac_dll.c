@@ -106,6 +106,12 @@ static void test_hwnd_render_target_wm_paint(void)
     monac_get_frame_stats(ed, &stats);
     MT_ASSERT_EQ(2, stats.frame_count);
 
+    /* Simulate dynamic per-monitor DPI switch (150% = 144 DPI) */
+    SendMessageW(ed_hwnd, 0x02E0u /* WM_DPICHANGED */, MAKEWPARAM(144, 144), 0);
+    SendMessageW(ed_hwnd, WM_PAINT, 0, 0);
+    monac_get_frame_stats(ed, &stats);
+    MT_ASSERT_EQ(3, stats.frame_count);
+
     monac_destroy(ed);
     DestroyWindow(parent);
 }

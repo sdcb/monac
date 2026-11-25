@@ -17,10 +17,12 @@
 #endif
 
 typedef UINT (WINAPI *mc_get_dpi_for_window_fn)(HWND);
+typedef HRESULT (WINAPI *mc_get_dpi_for_monitor_fn)(HMONITOR, int, UINT *, UINT *);
 
 static float mc_query_window_dpi(HWND hwnd)
 {
     static mc_get_dpi_for_window_fn p_get_dpi = NULL;
+    static mc_get_dpi_for_monitor_fn p_get_mon_dpi = NULL;
     static bool probed = false;
     if (!probed) {
         HMODULE u32 = GetModuleHandleW(L"user32.dll");
@@ -28,11 +30,26 @@ static float mc_query_window_dpi(HWND hwnd)
             p_get_dpi = (mc_get_dpi_for_window_fn)(void *)GetProcAddress(
                 u32, "GetDpiForWindow");
         }
+        if (p_get_dpi == NULL) {
+            HMODULE shcore = LoadLibraryW(L"shcore.dll");
+            if (shcore != NULL) {
+                p_get_mon_dpi = (mc_get_dpi_for_monitor_fn)(void *)GetProcAddress(
+                    shcore, "GetDpiForMonitor");
+            }
+        }
         probed = true;
     }
     if (p_get_dpi != NULL && hwnd != NULL) {
         UINT d = p_get_dpi(hwnd);
         if (d >= 48 && d <= 480) return (float)d;
+    }
+    if (p_get_mon_dpi != NULL && hwnd != NULL) {
+        HMONITOR mon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+        UINT dx = 96, dy = 96;
+        if (mon != NULL && SUCCEEDED(p_get_mon_dpi(mon, 0, &dx, &dy)) &&
+            dx >= 48 && dx <= 480) {
+            return (float)dx;
+        }
     }
     {
         HDC hdc = GetDC(hwnd);
@@ -458,6 +475,14 @@ static LRESULT CALLBACK mc_win32_wndproc(HWND hwnd, UINT msg,
     case WM_SIZE: {
         UINT w = LOWORD(lParam);
         UINT h = HIWORD(lParam);
+        float cur_dpi = mc_query_window_dpi(hwnd);
+        if (cur_dpi >= 48.0f && cur_dpi <= 480.0f && cur_dpi != ed->dpi) {
+            ed->dpi = cur_dpi;
+            if (ed->renderer.hwnd_rt != NULL) {
+                MC_CALL(MC_AS(ID2D1RenderTarget, ed->renderer.hwnd_rt),
+                        SetDpi, ed->dpi, ed->dpi);
+            }
+        }
         ed->viewport_w = mc_px_to_dip(ed, (int)w);
         ed->viewport_h = mc_px_to_dip(ed, (int)h);
         mc_renderer_resize(ed, w, h);
@@ -481,6 +506,7 @@ static LRESULT CALLBACK mc_win32_wndproc(HWND hwnd, UINT msg,
                 ed->viewport_h = mc_px_to_dip(ed, rc.bottom - rc.top);
                 mc_editor_update_wrap_width(ed);
             }
+            mc_ime_update_position(ed);
             InvalidateRect(hwnd, NULL, FALSE);
         }
         return 0;

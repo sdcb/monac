@@ -37,6 +37,17 @@ typedef struct mc_selftest_ctx {
         }                                                                       \
     } while (0)
 
+#ifndef WM_DPICHANGED
+#define WM_DPICHANGED 0x02E0
+#endif
+
+/* Win7-safe progressive High-DPI opt-in (PMv2 -> PMv1 -> System DPI aware). */
+void mc_demo_enable_high_dpi(void);
+UINT mc_demo_get_dpi(HWND hwnd);
+int mc_demo_dip_to_px(HWND hwnd, int dip);
+void mc_demo_handle_dpi_changed(HWND host_hwnd, monac_editor_t *ed,
+                                WPARAM wParam, LPARAM lParam);
+
 bool mc_demo_save_png_bgra(const wchar_t *path, uint32_t width, uint32_t height,
                            const void *bgra_pixels, uint32_t stride);
 

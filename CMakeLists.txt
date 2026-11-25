@@ -108,7 +108,7 @@ add_executable(demo_json_fold
     examples/demo_common.c
     examples/demo_json_fold.c
 )
-target_link_libraries(demo_json_fold PRIVATE monac user32 ole32 shell32 windowscodecs)
+target_link_libraries(demo_json_fold PRIVATE monac user32 gdi32 ole32 shell32 windowscodecs)
 
 # Independent monac_lsp library (depends ONLY on public monac.h API)
 set(MONAC_LSP_SOURCES
@@ -153,7 +153,7 @@ add_executable(demo_lsp_csharp
     examples/demo_lsp_csharp.c
 )
 target_compile_definitions(demo_lsp_csharp PRIVATE MONAC_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
-target_link_libraries(demo_lsp_csharp PRIVATE monac_lsp monac user32 ole32 shell32 windowscodecs)
+target_link_libraries(demo_lsp_csharp PRIVATE monac_lsp monac user32 gdi32 ole32 shell32 windowscodecs)
 add_dependencies(demo_lsp_csharp mock_lsp_server)
 
 if(BUILD_TESTING)

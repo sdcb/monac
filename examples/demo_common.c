@@ -24,6 +24,111 @@ static const GUID DEMO_GUID_WICPixelFormat32bppBGRA = {
     { 0xb1u, 0x85u, 0x3du, 0x77u, 0x76u, 0x8du, 0xc9u, 0x0fu }
 };
 
+typedef BOOL (WINAPI *demo_set_dpi_ctx_fn)(HANDLE);
+typedef HRESULT (WINAPI *demo_set_dpi_awareness_fn)(int);
+typedef BOOL (WINAPI *demo_set_dpi_aware_fn)(void);
+typedef UINT (WINAPI *demo_get_dpi_for_window_fn)(HWND);
+typedef HRESULT (WINAPI *demo_get_dpi_for_monitor_fn)(HMONITOR, int, UINT *, UINT *);
+
+void mc_demo_enable_high_dpi(void)
+{
+    HMODULE u32 = GetModuleHandleW(L"user32.dll");
+    if (u32 != NULL) {
+        demo_set_dpi_ctx_fn p_set_ctx =
+            (demo_set_dpi_ctx_fn)(void *)GetProcAddress(
+                u32, "SetProcessDpiAwarenessContext");
+        if (p_set_ctx != NULL) {
+            /* DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = (HANDLE)-4, PMv1 = -3 */
+            if (p_set_ctx((HANDLE)(INT_PTR)-4) || p_set_ctx((HANDLE)(INT_PTR)-3)) {
+                return;
+            }
+        }
+    }
+    {
+        HMODULE shcore = LoadLibraryW(L"shcore.dll");
+        if (shcore != NULL) {
+            demo_set_dpi_awareness_fn p_set_aw =
+                (demo_set_dpi_awareness_fn)(void *)GetProcAddress(
+                    shcore, "SetProcessDpiAwareness");
+            if (p_set_aw != NULL) {
+                /* PROCESS_PER_MONITOR_DPI_AWARE = 2 */
+                HRESULT hr = p_set_aw(2);
+                if (SUCCEEDED(hr) || hr == E_ACCESSDENIED) {
+                    return;
+                }
+            }
+        }
+    }
+    if (u32 != NULL) {
+        demo_set_dpi_aware_fn p_legacy =
+            (demo_set_dpi_aware_fn)(void *)GetProcAddress(u32, "SetProcessDPIAware");
+        if (p_legacy != NULL) {
+            (void)p_legacy();
+        }
+    }
+}
+
+UINT mc_demo_get_dpi(HWND hwnd)
+{
+    static demo_get_dpi_for_window_fn p_win_dpi = NULL;
+    static demo_get_dpi_for_monitor_fn p_mon_dpi = NULL;
+    static bool probed = false;
+    if (!probed) {
+        HMODULE u32 = GetModuleHandleW(L"user32.dll");
+        if (u32 != NULL) {
+            p_win_dpi = (demo_get_dpi_for_window_fn)(void *)GetProcAddress(
+                u32, "GetDpiForWindow");
+        }
+        if (p_win_dpi == NULL) {
+            HMODULE shcore = LoadLibraryW(L"shcore.dll");
+            if (shcore != NULL) {
+                p_mon_dpi = (demo_get_dpi_for_monitor_fn)(void *)GetProcAddress(
+                    shcore, "GetDpiForMonitor");
+            }
+        }
+        probed = true;
+    }
+    if (p_win_dpi != NULL && hwnd != NULL) {
+        UINT d = p_win_dpi(hwnd);
+        if (d >= 48 && d <= 480) return d;
+    }
+    if (p_mon_dpi != NULL && hwnd != NULL) {
+        HMONITOR mon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+        UINT dx = 96, dy = 96;
+        if (mon != NULL && SUCCEEDED(p_mon_dpi(mon, 0, &dx, &dy)) &&
+            dx >= 48 && dx <= 480) {
+            return dx;
+        }
+    }
+    {
+        HDC hdc = GetDC(hwnd);
+        int dpi = hdc != NULL ? GetDeviceCaps(hdc, LOGPIXELSX) : 96;
+        if (hdc != NULL) ReleaseDC(hwnd, hdc);
+        return dpi > 0 ? (UINT)dpi : 96u;
+    }
+}
+
+int mc_demo_dip_to_px(HWND hwnd, int dip)
+{
+    return MulDiv(dip, (int)mc_demo_get_dpi(hwnd), 96);
+}
+
+void mc_demo_handle_dpi_changed(HWND host_hwnd, monac_editor_t *ed,
+                                WPARAM wParam, LPARAM lParam)
+{
+    const RECT *suggested = (const RECT *)lParam;
+    if (ed != NULL && monac_get_hwnd(ed) != NULL) {
+        SendMessageW(monac_get_hwnd(ed), WM_DPICHANGED, wParam, lParam);
+    }
+    if (host_hwnd != NULL && suggested != NULL) {
+        SetWindowPos(host_hwnd, NULL,
+                     suggested->left, suggested->top,
+                     suggested->right - suggested->left,
+                     suggested->bottom - suggested->top,
+                     SWP_NOZORDER | SWP_NOACTIVATE);
+    }
+}
+
 bool mc_demo_save_png_bgra(const wchar_t *path, uint32_t width, uint32_t height,
                            const void *bgra_pixels, uint32_t stride)
 {

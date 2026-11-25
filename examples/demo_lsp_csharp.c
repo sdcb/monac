@@ -96,6 +96,9 @@ static LRESULT CALLBACK lsp_host_wndproc(HWND hwnd, UINT msg, WPARAM wParam, LPA
     switch (msg) {
     case WM_ERASEBKGND:
         return 1;
+    case WM_DPICHANGED:
+        mc_demo_handle_dpi_changed(hwnd, app ? app->ed : NULL, wParam, lParam);
+        return 0;
     case WM_SIZE:
         if (app && app->ed) monac_resize(app->ed, LOWORD(lParam), HIWORD(lParam));
         return 0;
@@ -298,9 +301,13 @@ done:
 int main(void)
 {
     int argc = 0;
-    wchar_t **argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-    bool selftest = mc_demo_has_arg(argc, argv, L"--selftest");
+    wchar_t **argv;
+    bool selftest;
     wchar_t server_cmd[MAX_PATH * 2];
+
+    mc_demo_enable_high_dpi();
+    argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    selftest = mc_demo_has_arg(argc, argv, L"--selftest");
 
     resolve_server_command(argc, argv, server_cmd, MAX_PATH * 2);
     if (argv != NULL) LocalFree(argv);
@@ -316,8 +323,10 @@ int main(void)
         monac_lsp_config_t cfg;
         MSG msg;
         RECT rc;
+        int init_w = mc_demo_dip_to_px(NULL, 1024);
+        int init_h = mc_demo_dip_to_px(NULL, 680);
 
-        app.host_hwnd = create_lsp_host(&app, CW_USEDEFAULT, CW_USEDEFAULT, 1024, 680, false);
+        app.host_hwnd = create_lsp_host(&app, CW_USEDEFAULT, CW_USEDEFAULT, init_w, init_h, false);
         if (app.host_hwnd == NULL) return 1;
         app.ed = monac_create(NULL);
         if (app.ed == NULL) return 1;
